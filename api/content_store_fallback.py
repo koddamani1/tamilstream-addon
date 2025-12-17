@@ -8,13 +8,19 @@ from typing import Optional, List, Dict, Any
 
 def load_scraped_content():
     """Load scraped content from JSON file if available"""
-    try:
-        json_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "scraped_content.json")
-        if os.path.exists(json_path):
-            with open(json_path, "r", encoding="utf-8") as f:
-                return json.load(f)
-    except Exception:
-        pass
+    possible_paths = [
+        os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "scraped_content.json"),
+        os.path.join(os.path.dirname(__file__), "..", "data", "scraped_content.json"),
+        "/var/task/data/scraped_content.json",
+        "data/scraped_content.json",
+    ]
+    for json_path in possible_paths:
+        try:
+            if os.path.exists(json_path):
+                with open(json_path, "r", encoding="utf-8") as f:
+                    return json.load(f)
+        except Exception:
+            continue
     return None
 
 SAMPLE_TAMIL_MOVIES = [
