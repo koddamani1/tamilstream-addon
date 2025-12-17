@@ -6,13 +6,28 @@ import json
 import logging
 from api.config import settings
 from api.models import UserConfig
-from api.content_store import (
-    get_all_content, get_content_by_id, get_torrents_for_content,
-    search_content, initialize_sample_data, update_content_poster
-)
+try:
+    from api.content_store import (
+        get_all_content, get_content_by_id, get_torrents_for_content,
+        search_content, initialize_sample_data, update_content_poster
+    )
+except ImportError:
+    from api.content_store_fallback import (
+        get_all_content, get_content_by_id, get_torrents_for_content,
+        search_content, initialize_sample_data, update_content_poster
+    )
+
 from api.torbox_service import create_torbox_service
-from api.metadata_service import get_poster_for_imdb_sync
-from api.tamildhool_scraper import scrape_episode_details
+
+try:
+    from api.metadata_service import get_poster_for_imdb_sync
+except ImportError:
+    get_poster_for_imdb_sync = lambda x: None
+
+try:
+    from api.tamildhool_scraper import scrape_episode_details
+except ImportError:
+    scrape_episode_details = lambda x: None
 
 logger = logging.getLogger(__name__)
 router = APIRouter()

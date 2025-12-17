@@ -8,11 +8,22 @@ import json
 
 from api.config import settings
 from api.stremio_routes import router as stremio_router
-from api.tamildhool_scraper import (
-    scrape_latest_episodes, scrape_show_list, scrape_all_shows,
-    convert_to_stremio_format, CHANNELS
-)
-from api.content_store import add_content
+
+try:
+    from api.tamildhool_scraper import (
+        scrape_latest_episodes, scrape_show_list, scrape_all_shows,
+        convert_to_stremio_format, CHANNELS
+    )
+    from api.content_store import add_content
+    _scraper_available = True
+except ImportError:
+    _scraper_available = False
+    CHANNELS = {}
+    scrape_latest_episodes = lambda x: []
+    scrape_show_list = lambda x, y: []
+    scrape_all_shows = lambda: []
+    convert_to_stremio_format = lambda x: []
+    add_content = lambda x: False
 
 app = FastAPI(
     title=settings.app_name,
