@@ -1,0 +1,26 @@
+name: Daily TamilDhool Scrape
+
+on:
+  schedule:
+    - cron: '0 6 * * *'
+    - cron: '0 15 * * *'
+    - cron: '0 20 * * *'
+  workflow_dispatch:
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install beautifulsoup4
+      - run: python -m api.tamildhool_scraper
+      - name: Commit changes
+        run: |
+          git config user.email "action@github.com"
+          git config user.name "GitHub Action"
+          git add data/scraped_content.json
+          git diff --staged --quiet || git commit -m "Update scraped content"
+          git push
