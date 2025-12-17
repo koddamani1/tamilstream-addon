@@ -21,6 +21,28 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
+def load_scraped_content():
+    """Load scraped content from JSON file if available"""
+    possible_paths = [
+        os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "scraped_content.json"),
+        os.path.join(os.path.dirname(__file__), "..", "data", "scraped_content.json"),
+        "/var/task/data/scraped_content.json",
+        "data/scraped_content.json",
+    ]
+    for json_path in possible_paths:
+        try:
+            if os.path.exists(json_path):
+                with open(json_path, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                    logger.info(f"Loaded scraped content from {json_path}")
+                    return data
+        except Exception as e:
+            logger.debug(f"Failed to load {json_path}: {e}")
+            continue
+    return None
+
+_scraped_data = load_scraped_content()
+
 SAMPLE_TAMIL_MOVIES = [
     {
         "id": "tt15354916",
@@ -400,9 +422,13 @@ def get_all_content(content_type: Optional[str] = None) -> List[Dict[str, Any]]:
     """Get all content from database"""
     db = get_db()
     if not db:
+        if _scraped_data and (_scraped_data.get("series") or _scraped_data.get("movies")):
+            all_content = _scraped_data.get("movies", []) + _scraped_data.get("series", [])
+        else:
+            all_content = SAMPLE_TAMIL_MOVIES + SAMPLE_TAMIL_SERIES
         if content_type:
-            return [c for c in SAMPLE_TAMIL_MOVIES + SAMPLE_TAMIL_SERIES if c.get("type") == content_type]
-        return SAMPLE_TAMIL_MOVIES + SAMPLE_TAMIL_SERIES
+            return [c for c in all_content if c.get("type") == content_type]
+        return all_content
     
     try:
         if content_type:
@@ -422,7 +448,11 @@ def get_content_by_id(content_id: str) -> Optional[Dict[str, Any]]:
     """Get content by ID"""
     db = get_db()
     if not db:
-        for c in SAMPLE_TAMIL_MOVIES + SAMPLE_TAMIL_SERIES:
+        if _scraped_data and (_scraped_data.get("series") or _scraped_data.get("movies")):
+            all_content = _scraped_data.get("movies", []) + _scraped_data.get("series", [])
+        else:
+            all_content = SAMPLE_TAMIL_MOVIES + SAMPLE_TAMIL_SERIES
+        for c in all_content:
             if c.get("id") == content_id or c.get("imdb_id") == content_id:
                 return c
         return None
