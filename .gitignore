@@ -38,8 +38,9 @@ env/
 .env.local
 .env.*.local
 
-# Data files (generated)
-data/
+# Data files (keep scraped_content.json)
+data/*.tmp
+data/*.bak
 
 # Logs
 *.log
