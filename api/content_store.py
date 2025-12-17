@@ -8,7 +8,16 @@ import os
 import logging
 from datetime import datetime
 
-from api.db import init_db, get_db, Content, Torrent, Episode
+try:
+    from api.db import init_db, get_db, Content, Torrent, Episode
+    _db_available = True
+except ImportError:
+    init_db = lambda: False
+    get_db = lambda: None
+    Content = None
+    Torrent = None
+    Episode = None
+    _db_available = False
 
 logger = logging.getLogger(__name__)
 

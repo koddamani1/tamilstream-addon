@@ -23,7 +23,7 @@ try:
     _sqlalchemy_available = True
     Base = declarative_base()
     
-    class Content(Base):
+    class _Content(Base):
         __tablename__ = "content"
         
         id = Column(String, primary_key=True)
@@ -43,7 +43,7 @@ try:
         created_at = Column(DateTime, default=datetime.utcnow)
         updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    class Torrent(Base):
+    class _Torrent(Base):
         __tablename__ = "torrents"
         
         id = Column(String, primary_key=True)
@@ -59,7 +59,7 @@ try:
         magnet = Column(Text, nullable=True)
         created_at = Column(DateTime, default=datetime.utcnow)
 
-    class Episode(Base):
+    class _Episode(Base):
         __tablename__ = "episodes"
         
         id = Column(String, primary_key=True)
@@ -72,6 +72,10 @@ try:
         poster = Column(String, nullable=True)
         video_sources = Column(JSON, default=list)
         created_at = Column(DateTime, default=datetime.utcnow)
+    
+    Content = _Content
+    Torrent = _Torrent
+    Episode = _Episode
 
 except ImportError:
     _sqlalchemy_available = False
