@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ app_name }} - Configure</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #7B2D8E;
+            --secondary-color: #5C1A6B;
+            --accent-color: #FF6B35;
+            --dark-bg: #0D0D0D;
+            --card-bg: #1A1A2E;
+            --text-primary: #FFFFFF;
+            --text-secondary: #B0B0B0;
+        }
+        
+        body {
+            background: linear-gradient(135deg, var(--dark-bg) 0%, #16213E 100%);
+            min-height: 100vh;
+            color: var(--text-primary);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .hero-section {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            padding: 3rem 0;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+        
+        .hero-section h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        
+        .hero-section .subtitle {
+            color: rgba(255,255,255,0.8);
+            font-size: 1.1rem;
+        }
+        
+        .logo-icon {
+            font-size: 4rem;
+            color: var(--accent-color);
+            margin-bottom: 1rem;
+        }
+        
+        .config-card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .config-card h3 {
+            color: var(--accent-color);
+            margin-bottom: 1.5rem;
+            font-weight: 600;
+        }
+        
+        .form-label {
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+        
+        .form-control, .form-select {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: var(--text-primary);
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+        }
+        
+        .form-control:focus, .form-select:focus {
+            background: rgba(255,255,255,0.08);
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(123,45,142,0.25);
+            color: var(--text-primary);
+        }
+        
+        .form-control::placeholder {
+            color: var(--text-secondary);
+        }
+        
+        .form-check-input {
+            background-color: rgba(255,255,255,0.1);
+            border-color: rgba(255,255,255,0.3);
+        }
+        
+        .form-check-input:checked {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            border: none;
+            padding: 0.75rem 2rem;
+            font-weight: 600;
+            border-radius: 8px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(123,45,142,0.4);
+            background: linear-gradient(135deg, var(--secondary-color) 0%, var(--primary-color) 100%);
+        }
+        
+        .feature-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .feature-list li {
+            padding: 0.5rem 0;
+            color: var(--text-secondary);
+        }
+        
+        .feature-list li i {
+            color: var(--accent-color);
+            margin-right: 0.5rem;
+        }
+        
+        .info-box {
+            background: rgba(123,45,142,0.1);
+            border-left: 4px solid var(--primary-color);
+            padding: 1rem;
+            border-radius: 0 8px 8px 0;
+            margin-bottom: 1.5rem;
+        }
+        
+        .info-box p {
+            margin: 0;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+        
+        .quality-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        
+        .quality-option {
+            display: flex;
+            align-items: center;
+            padding: 0.5rem 1rem;
+            background: rgba(255,255,255,0.05);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .quality-option:hover {
+            background: rgba(255,255,255,0.1);
+        }
+        
+        .quality-option input {
+            margin-right: 0.5rem;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 2rem 0;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+        
+        footer a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="hero-section">
+        <div class="container">
+            <i class="fas fa-film logo-icon"></i>
+            <h1>{{ app_name }}</h1>
+            <p class="subtitle">{{ app_description }}</p>
+            <span class="badge bg-dark">v{{ app_version }}</span>
+        </div>
+    </div>
+    
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="config-card">
+                    <h3><i class="fas fa-cog me-2"></i>Configuration</h3>
+                    
+                    <div class="info-box">
+                        <p><i class="fas fa-info-circle me-2"></i>Configure your addon settings below. TorBox API key is required for debrid streaming.</p>
+                    </div>
+                    
+                    <form action="/configure" method="POST">
+                        <div class="mb-4">
+                            <label for="torbox_api_key" class="form-label">
+                                <i class="fas fa-key me-2"></i>TorBox API Key
+                            </label>
+                            <input type="password" 
+                                   class="form-control" 
+                                   id="torbox_api_key" 
+                                   name="torbox_api_key"
+                                   placeholder="Enter your TorBox API key"
+                                   value="{{ existing_config.torbox_api_key if existing_config else '' }}">
+                            <div class="form-text text-muted">
+                                Get your API key from <a href="https://torbox.app/settings" target="_blank" class="text-warning">TorBox Settings</a>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label class="form-label">
+                                <i class="fas fa-video me-2"></i>Quality Preferences
+                            </label>
+                            <div class="quality-options">
+                                <label class="quality-option">
+                                    <input type="checkbox" name="quality_filter" value="4K" checked>
+                                    <span>4K UHD</span>
+                                </label>
+                                <label class="quality-option">
+                                    <input type="checkbox" name="quality_filter" value="1080p" checked>
+                                    <span>1080p Full HD</span>
+                                </label>
+                                <label class="quality-option">
+                                    <input type="checkbox" name="quality_filter" value="HD" checked>
+                                    <span>720p HD</span>
+                                </label>
+                                <label class="quality-option">
+                                    <input type="checkbox" name="quality_filter" value="CAM">
+                                    <span>CAM/TS</span>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" id="show_cam_quality" name="show_cam_quality">
+                                <label class="form-check-label" for="show_cam_quality">
+                                    Show CAM/Theater recordings (lower quality)
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-magic me-2"></i>Generate Addon Link
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                
+                <div class="config-card mt-4">
+                    <h3><i class="fas fa-star me-2"></i>Features</h3>
+                    <ul class="feature-list">
+                        <li><i class="fas fa-check"></i>Latest Tamil Movies & Series</li>
+                        <li><i class="fas fa-check"></i>TorBox Debrid Integration</li>
+                        <li><i class="fas fa-check"></i>Multiple Quality Options (4K, 1080p, 720p)</li>
+                        <li><i class="fas fa-check"></i>Automatic Content Updates</li>
+                        <li><i class="fas fa-check"></i>Fast Cached Streams</li>
+                        <li><i class="fas fa-check"></i>IMDb Metadata Integration</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <footer>
+        <p>Built with <i class="fas fa-heart text-danger"></i> for Tamil Cinema lovers</p>
+        <p><a href="https://github.com" target="_blank"><i class="fab fa-github me-1"></i>View on GitHub</a></p>
+    </footer>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
