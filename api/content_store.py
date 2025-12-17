@@ -1,50 +1,6 @@
 from typing import Optional, List, Dict, Any
-from datetime import datetime
-from api.models import TamilContent, TorrentInfo, ContentType, StreamQuality
 import json
 import os
-
-CONTENT_FILE = "data/content.json"
-TORRENTS_FILE = "data/torrents.json"
-
-
-def ensure_data_dir():
-    os.makedirs("data", exist_ok=True)
-
-
-def load_content() -> List[Dict[str, Any]]:
-    ensure_data_dir()
-    if os.path.exists(CONTENT_FILE):
-        try:
-            with open(CONTENT_FILE, "r", encoding="utf-8") as f:
-                return json.load(f)
-        except:
-            return []
-    return []
-
-
-def save_content(content: List[Dict[str, Any]]):
-    ensure_data_dir()
-    with open(CONTENT_FILE, "w", encoding="utf-8") as f:
-        json.dump(content, f, indent=2, default=str)
-
-
-def load_torrents() -> List[Dict[str, Any]]:
-    ensure_data_dir()
-    if os.path.exists(TORRENTS_FILE):
-        try:
-            with open(TORRENTS_FILE, "r", encoding="utf-8") as f:
-                return json.load(f)
-        except:
-            return []
-    return []
-
-
-def save_torrents(torrents: List[Dict[str, Any]]):
-    ensure_data_dir()
-    with open(TORRENTS_FILE, "w", encoding="utf-8") as f:
-        json.dump(torrents, f, indent=2, default=str)
-
 
 SAMPLE_TAMIL_MOVIES = [
     {
@@ -308,73 +264,60 @@ SAMPLE_TORRENTS = [
     }
 ]
 
+_content_cache = None
+_torrents_cache = None
+
 
 def initialize_sample_data():
-    content = load_content()
-    if not content:
-        save_content(SAMPLE_TAMIL_MOVIES + SAMPLE_TAMIL_SERIES)
-    
-    torrents = load_torrents()
-    if not torrents:
-        save_torrents(SAMPLE_TORRENTS)
+    global _content_cache, _torrents_cache
+    _content_cache = SAMPLE_TAMIL_MOVIES + SAMPLE_TAMIL_SERIES
+    _torrents_cache = SAMPLE_TORRENTS
 
 
 def get_all_content(content_type: Optional[str] = None) -> List[Dict[str, Any]]:
-    content = load_content()
+    global _content_cache
+    if _content_cache is None:
+        initialize_sample_data()
+    
     if content_type:
-        return [c for c in content if c.get("type") == content_type]
-    return content
+        return [c for c in _content_cache if c.get("type") == content_type]
+    return _content_cache
 
 
 def get_content_by_id(content_id: str) -> Optional[Dict[str, Any]]:
-    content = load_content()
-    for c in content:
+    global _content_cache
+    if _content_cache is None:
+        initialize_sample_data()
+    
+    for c in _content_cache:
         if c.get("id") == content_id or c.get("imdb_id") == content_id:
             return c
     return None
 
 
 def get_torrents_for_content(content_id: str) -> List[Dict[str, Any]]:
-    torrents = load_torrents()
-    matching = [t for t in torrents if t.get("content_id") == content_id]
+    global _torrents_cache
+    if _torrents_cache is None:
+        initialize_sample_data()
+    
+    matching = [t for t in _torrents_cache if t.get("content_id") == content_id]
     
     if not matching:
         content = get_content_by_id(content_id)
         if content:
             imdb_id = content.get("imdb_id")
             internal_id = content.get("id")
-            for t in torrents:
+            for t in _torrents_cache:
                 if t.get("content_id") in [imdb_id, internal_id]:
                     matching.append(t)
     
     return matching
 
 
-def add_content(content: Dict[str, Any]) -> bool:
-    all_content = load_content()
-    for i, c in enumerate(all_content):
-        if c.get("id") == content.get("id"):
-            all_content[i] = content
-            save_content(all_content)
-            return True
-    all_content.append(content)
-    save_content(all_content)
-    return True
-
-
-def add_torrent(torrent: Dict[str, Any]) -> bool:
-    all_torrents = load_torrents()
-    for i, t in enumerate(all_torrents):
-        if t.get("info_hash") == torrent.get("info_hash"):
-            all_torrents[i] = torrent
-            save_torrents(all_torrents)
-            return True
-    all_torrents.append(torrent)
-    save_torrents(all_torrents)
-    return True
-
-
 def search_content(query: str) -> List[Dict[str, Any]]:
-    content = load_content()
+    global _content_cache
+    if _content_cache is None:
+        initialize_sample_data()
+    
     query_lower = query.lower()
-    return [c for c in content if query_lower in c.get("title", "").lower()]
+    return [c for c in _content_cache if query_lower in c.get("title", "").lower()]

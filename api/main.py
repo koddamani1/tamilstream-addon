@@ -1,7 +1,6 @@
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
-from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 import os
 import base64
@@ -9,7 +8,6 @@ import json
 
 from api.config import settings
 from api.stremio_routes import router as stremio_router
-from api.content_store import initialize_sample_data
 
 app = FastAPI(
     title=settings.app_name,
@@ -27,34 +25,51 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-templates = Jinja2Templates(directory="templates")
+current_dir = os.path.dirname(os.path.abspath(__file__))
+parent_dir = os.path.dirname(current_dir)
+template_paths = [
+    os.path.join(parent_dir, "templates"),
+    os.path.join(current_dir, "..", "templates"),
+    "templates",
+    "/var/task/templates"
+]
+
+template_dir = None
+for path in template_paths:
+    if os.path.exists(path):
+        template_dir = path
+        break
+
+if template_dir:
+    templates = Jinja2Templates(directory=template_dir)
+else:
+    templates = None
 
 app.include_router(stremio_router)
 
 
-@app.on_event("startup")
-async def startup_event():
-    initialize_sample_data()
-
-
 @app.get("/", response_class=HTMLResponse)
 async def home(request: Request):
-    return templates.TemplateResponse("configure.html", {
-        "request": request,
-        "app_name": settings.app_name,
-        "app_version": settings.app_version,
-        "app_description": settings.app_description
-    })
+    if templates:
+        return templates.TemplateResponse("configure.html", {
+            "request": request,
+            "app_name": settings.app_name,
+            "app_version": settings.app_version,
+            "app_description": settings.app_description
+        })
+    return HTMLResponse(content=get_fallback_html(request), status_code=200)
 
 
 @app.get("/configure", response_class=HTMLResponse)
 async def configure(request: Request):
-    return templates.TemplateResponse("configure.html", {
-        "request": request,
-        "app_name": settings.app_name,
-        "app_version": settings.app_version,
-        "app_description": settings.app_description
-    })
+    if templates:
+        return templates.TemplateResponse("configure.html", {
+            "request": request,
+            "app_name": settings.app_name,
+            "app_version": settings.app_version,
+            "app_description": settings.app_description
+        })
+    return HTMLResponse(content=get_fallback_html(request), status_code=200)
 
 
 @app.post("/configure")
@@ -67,21 +82,23 @@ async def save_configure(request: Request):
         "show_cam_quality": form_data.get("show_cam_quality") == "on"
     }
     
-    config_str = base64.urlsafe_b64encode(json.dumps(config).encode()).decode()
+    config_str = base64.urlsafe_b64encode(json.dumps(config).encode()).decode().rstrip('=')
     
     host = request.headers.get("host", "localhost:5000")
-    protocol = "https" if "https" in str(request.url) else "http"
+    protocol = "https" if "vercel" in host or "https" in str(request.url) else "http"
     
     manifest_url = f"{protocol}://{host}/{config_str}/manifest.json"
     stremio_url = f"stremio://{host}/{config_str}/manifest.json"
     
-    return templates.TemplateResponse("install.html", {
-        "request": request,
-        "app_name": settings.app_name,
-        "manifest_url": manifest_url,
-        "stremio_url": stremio_url,
-        "config_str": config_str
-    })
+    if templates:
+        return templates.TemplateResponse("install.html", {
+            "request": request,
+            "app_name": settings.app_name,
+            "manifest_url": manifest_url,
+            "stremio_url": stremio_url,
+            "config_str": config_str
+        })
+    return HTMLResponse(content=get_install_html(manifest_url, stremio_url), status_code=200)
 
 
 @app.get("/health")
@@ -92,15 +109,113 @@ async def health_check():
 @app.get("/{config}/configure", response_class=HTMLResponse)
 async def configure_with_config(request: Request, config: str):
     try:
+        padding = 4 - len(config) % 4
+        if padding != 4:
+            config += '=' * padding
         decoded = base64.urlsafe_b64decode(config.encode()).decode()
         existing_config = json.loads(decoded)
     except:
         existing_config = {}
     
-    return templates.TemplateResponse("configure.html", {
-        "request": request,
-        "app_name": settings.app_name,
-        "app_version": settings.app_version,
-        "app_description": settings.app_description,
-        "existing_config": existing_config
-    })
+    if templates:
+        return templates.TemplateResponse("configure.html", {
+            "request": request,
+            "app_name": settings.app_name,
+            "app_version": settings.app_version,
+            "app_description": settings.app_description,
+            "existing_config": existing_config
+        })
+    return HTMLResponse(content=get_fallback_html(request), status_code=200)
+
+
+def get_fallback_html(request: Request):
+    host = request.headers.get("host", "localhost:5000")
+    protocol = "https" if "vercel" in host else "http"
+    return f"""
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{settings.app_name} - Configure</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {{ background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); min-height: 100vh; }}
+        .card {{ background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); }}
+        .card, .form-control, .form-check-label, h1, p, label {{ color: #fff; }}
+        .btn-primary {{ background: #e50914; border-color: #e50914; }}
+        .btn-primary:hover {{ background: #b20710; }}
+    </style>
+</head>
+<body>
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <div class="text-center mb-4">
+                    <h1>{settings.app_name}</h1>
+                    <p>{settings.app_description}</p>
+                </div>
+                <div class="card p-4">
+                    <form method="POST" action="/configure">
+                        <div class="mb-3">
+                            <label class="form-label">TorBox API Key (Optional)</label>
+                            <input type="password" class="form-control bg-dark text-white" name="torbox_api_key" placeholder="Your TorBox API key">
+                            <small class="text-muted">Get your API key from <a href="https://torbox.app" target="_blank">torbox.app</a></small>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Quality Preferences</label>
+                            <div class="form-check"><input class="form-check-input" type="checkbox" name="quality_filter" value="4K" checked><label class="form-check-label">4K</label></div>
+                            <div class="form-check"><input class="form-check-input" type="checkbox" name="quality_filter" value="1080p" checked><label class="form-check-label">1080p</label></div>
+                            <div class="form-check"><input class="form-check-input" type="checkbox" name="quality_filter" value="HD" checked><label class="form-check-label">720p/HD</label></div>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Generate Install Link</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+"""
+
+
+def get_install_html(manifest_url, stremio_url):
+    return f"""
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{settings.app_name} - Install</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {{ background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); min-height: 100vh; }}
+        .card {{ background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); }}
+        .card, h1, p, label, .form-control {{ color: #fff; }}
+        .btn-primary {{ background: #e50914; border-color: #e50914; }}
+    </style>
+</head>
+<body>
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="text-center mb-4">
+                    <h1>Install {settings.app_name}</h1>
+                    <p>Your addon is ready to install!</p>
+                </div>
+                <div class="card p-4">
+                    <div class="mb-4">
+                        <a href="{stremio_url}" class="btn btn-primary btn-lg w-100">Install in Stremio</a>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Or copy this manifest URL:</label>
+                        <input type="text" class="form-control bg-dark" value="{manifest_url}" readonly onclick="this.select()">
+                    </div>
+                    <p class="text-muted small">Open Stremio, go to Addons, click the puzzle icon, and paste the manifest URL.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+"""
