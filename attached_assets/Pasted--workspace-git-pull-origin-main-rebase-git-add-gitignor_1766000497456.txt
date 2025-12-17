@@ -1,0 +1,34 @@
+~/workspace$ git pull origin main --rebase
+git add .gitignore data/scraped_content.json
+git commit -m "Add TamilDhool scraped content"
+git push origin main
+remote: Enumerating objects: 6, done.
+remote: Counting objects: 100% (6/6), done.
+remote: Compressing objects: 100% (3/3), done.
+remote: Total 5 (delta 1), reused 0 (delta 0), pack-reused 0 (from 0)
+Unpacking objects: 100% (5/5), 1.34 KiB | 456.00 KiB/s, done.
+From https://github.com/koddamani1/tamilstream-addon
+ * branch            main       -> FETCH_HEAD
+   f803873..014bf13  main       -> origin/main
+Auto-merging .github/workflows/daily-scrape.yml
+CONFLICT (add/add): Merge conflict in .github/workflows/daily-scrape.yml
+error: could not apply b1725bd... Add automated scraping workflow for Tamil content updates
+hint: Resolve all conflicts manually, mark them as resolved with
+hint: "git add/rm <conflicted_files>", then run "git rebase --continue".
+hint: You can instead skip this commit: run "git rebase --skip".
+hint: To abort and get back to the state before "git rebase", run "git rebase --abort".
+hint: Disable this message with "git config set advice.mergeConflict false"
+Could not apply b1725bd... # Add automated scraping workflow for Tamil content updates
+fatal: pathspec 'data/scraped_content.json' did not match any files
+U   .github/workflows/daily-scrape.yml
+error: Committing is not possible because you have unmerged files.
+hint: Fix them up in the work tree, and then use 'git add/rm <file>'
+hint: as appropriate to mark resolution and make a commit.
+fatal: Exiting because of an unresolved conflict.
+To https://github.com/koddamani1/tamilstream-addon.git
+ ! [rejected]        main -> main (non-fast-forward)
+error: failed to push some refs to 'https://github.com/koddamani1/tamilstream-addon.git'
+hint: Updates were rejected because a pushed branch tip is behind its remote
+hint: counterpart. If you want to integrate the remote changes, use 'git pull'
+hint: before pushing again.
+hint: See the 'Note about fast-forwards' in 'git push --help' for details.
