@@ -19,3 +19,7 @@ pydantic
 pydantic-settings
 python-multipart
 uvicorn
+beautifulsoup4
+lxml
+psycopg2-binary
+sqlalchemy

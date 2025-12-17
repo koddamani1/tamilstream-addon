@@ -8,9 +8,10 @@ from api.config import settings
 from api.models import UserConfig
 from api.content_store import (
     get_all_content, get_content_by_id, get_torrents_for_content,
-    search_content, initialize_sample_data
+    search_content, initialize_sample_data, update_content_poster
 )
 from api.torbox_service import create_torbox_service
+from api.metadata_service import get_poster_for_imdb_sync
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -113,12 +114,20 @@ async def handle_catalog(type: str, id: str, config: Optional[str], skip: int, s
     
     metas = []
     for content in content_list:
+        imdb_id = content.get("imdb_id") or content.get("id")
+        poster = content.get("poster")
+        
+        if not poster and imdb_id and imdb_id.startswith("tt"):
+            poster = get_poster_for_imdb_sync(imdb_id)
+            if poster:
+                update_content_poster(imdb_id, poster)
+        
         meta = {
-            "id": content.get("imdb_id") or content.get("id"),
+            "id": imdb_id,
             "type": content.get("type"),
             "name": content.get("title"),
-            "poster": content.get("poster"),
-            "background": content.get("background") or content.get("poster"),
+            "poster": poster,
+            "background": content.get("background") or poster,
             "description": content.get("description", ""),
             "releaseInfo": str(content.get("year", "")),
             "imdbRating": str(content.get("rating", "")) if content.get("rating") else None,
@@ -155,12 +164,20 @@ async def handle_meta(type: str, id: str, config: Optional[str]):
             headers={"Access-Control-Allow-Origin": "*"}
         )
     
+    imdb_id = content.get("imdb_id") or content.get("id")
+    poster = content.get("poster")
+    
+    if not poster and imdb_id and imdb_id.startswith("tt"):
+        poster = get_poster_for_imdb_sync(imdb_id)
+        if poster:
+            update_content_poster(imdb_id, poster)
+    
     meta_data = {
-        "id": content.get("imdb_id") or content.get("id"),
+        "id": imdb_id,
         "type": content.get("type"),
         "name": content.get("title"),
-        "poster": content.get("poster"),
-        "background": content.get("background") or content.get("poster"),
+        "poster": poster,
+        "background": content.get("background") or poster,
         "description": content.get("description", ""),
         "releaseInfo": str(content.get("year", "")),
         "imdbRating": str(content.get("rating", "")) if content.get("rating") else None,

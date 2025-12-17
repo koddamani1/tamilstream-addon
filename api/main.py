@@ -8,6 +8,11 @@ import json
 
 from api.config import settings
 from api.stremio_routes import router as stremio_router
+from api.tamildhool_scraper import (
+    scrape_latest_episodes, scrape_show_list, scrape_all_shows,
+    convert_to_stremio_format, CHANNELS
+)
+from api.content_store import add_content
 
 app = FastAPI(
     title=settings.app_name,
@@ -104,6 +109,55 @@ async def save_configure(request: Request):
 @app.get("/health")
 async def health_check():
     return {"status": "healthy", "version": settings.app_version}
+
+
+@app.get("/api/scrape/latest")
+async def scrape_latest():
+    """Scrape latest episodes from TamilDhool"""
+    episodes = scrape_latest_episodes(20)
+    return {"count": len(episodes), "episodes": episodes}
+
+
+@app.get("/api/scrape/channel/{channel}")
+async def scrape_channel(channel: str):
+    """Scrape shows from a specific channel"""
+    if channel not in CHANNELS:
+        return {"error": f"Unknown channel. Available: {list(CHANNELS.keys())}"}
+    
+    serials = scrape_show_list(channel, "serials")
+    shows = scrape_show_list(channel, "shows")
+    
+    return {
+        "channel": CHANNELS[channel]["name"],
+        "serials_count": len(serials),
+        "shows_count": len(shows),
+        "serials": serials,
+        "shows": shows
+    }
+
+
+@app.post("/api/scrape/update")
+async def scrape_and_update():
+    """Scrape all shows and update the content catalog"""
+    all_shows = scrape_all_shows()
+    stremio_content = convert_to_stremio_format(all_shows)
+    
+    added_count = 0
+    for content in stremio_content:
+        if add_content(content):
+            added_count += 1
+    
+    return {
+        "scraped": len(all_shows),
+        "added": added_count,
+        "message": "Content catalog updated with TamilDhool shows"
+    }
+
+
+@app.get("/api/channels")
+async def list_channels():
+    """List available channels"""
+    return {"channels": CHANNELS}
 
 
 @app.get("/{config}/configure", response_class=HTMLResponse)
