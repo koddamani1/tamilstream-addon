@@ -12,6 +12,7 @@ from api.content_store import (
 )
 from api.torbox_service import create_torbox_service
 from api.metadata_service import get_poster_for_imdb_sync
+from api.tamildhool_scraper import scrape_episode_details
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -223,21 +224,42 @@ async def handle_stream(type: str, id: str, config: Optional[str]):
                 pass
     
     torrents = get_torrents_for_content(base_content_id)
+    content = get_content_by_id(base_content_id)
     
-    if not torrents:
-        content = get_content_by_id(base_content_id)
-        if content:
-            lookup_id = content.get("imdb_id") or content.get("id")
-            if lookup_id != base_content_id:
-                torrents = get_torrents_for_content(lookup_id)
-    
-    if not torrents:
-        return JSONResponse(
-            content={"streams": []},
-            headers={"Access-Control-Allow-Origin": "*"}
-        )
+    if not torrents and content:
+        lookup_id = content.get("imdb_id") or content.get("id")
+        if lookup_id != base_content_id:
+            torrents = get_torrents_for_content(lookup_id)
     
     streams = []
+    
+    if content and content.get("source_url"):
+        try:
+            episode_details = scrape_episode_details(content.get("source_url"))
+            if episode_details and episode_details.get("video_sources"):
+                for idx, source in enumerate(episode_details["video_sources"]):
+                    source_url = source.get("url", "")
+                    source_type = source.get("type", "iframe")
+                    
+                    if source_url:
+                        stream_data = {
+                            "name": "TamilDhool",
+                            "title": f"TamilDhool | Direct Stream #{idx+1}\nType: {source_type}",
+                            "externalUrl": source_url if source_type == "iframe" else None,
+                            "url": source_url if source_type == "direct" else None,
+                            "behaviorHints": {
+                                "bingeGroup": "tamildhool-direct",
+                                "notWebReady": source_type == "iframe"
+                            }
+                        }
+                        if source_type == "direct":
+                            stream_data.pop("externalUrl", None)
+                        else:
+                            stream_data.pop("url", None)
+                        streams.append(stream_data)
+        except Exception as e:
+            logger.debug(f"Error getting TamilDhool streams: {e}")
+    
     torbox_service = None
     
     if user_config.torbox_api_key:
