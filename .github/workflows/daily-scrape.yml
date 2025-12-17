@@ -10,25 +10,17 @@ on:
 jobs:
   scrape:
     runs-on: ubuntu-latest
-    
     steps:
       - uses: actions/checkout@v4
-      
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      
-      - name: Install dependencies
-        run: pip install beautifulsoup4
-      
-      - name: Run scraper
-        run: python -m api.tamildhool_scraper
-      
-      - name: Commit and push if changed
+      - run: pip install beautifulsoup4
+      - run: python -m api.tamildhool_scraper
+      - name: Commit changes
         run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
+          git config user.email "action@github.com"
+          git config user.name "GitHub Action"
           git add data/scraped_content.json
-          git diff --quiet && git diff --staged --quiet || git commit -m "Update scraped content [skip ci]"
+          git diff --staged --quiet || git commit -m "Update scraped content"
           git push
