@@ -4,3 +4,4 @@ pydantic-settings
 httpx
 jinja2
 beautifulsoup4
+python-multipart
