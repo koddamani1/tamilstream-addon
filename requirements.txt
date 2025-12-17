@@ -1,5 +1,6 @@
 fastapi
 pydantic
+pydantic-settings
 httpx
 jinja2
 beautifulsoup4
