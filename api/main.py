@@ -1,13 +1,25 @@
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
-from fastapi.templating import Jinja2Templates
 import os
 import base64
 import json
 
+try:
+    from fastapi.templating import Jinja2Templates
+except ImportError:
+    Jinja2Templates = None
+
 from api.config import settings
-from api.stremio_routes import router as stremio_router
+
+try:
+    from api.stremio_routes import router as stremio_router
+    _stremio_routes_available = True
+except Exception as e:
+    stremio_router = None
+    _stremio_routes_available = False
+    import logging
+    logging.error(f"Failed to import stremio_routes: {e}")
 
 try:
     from api.tamildhool_scraper import (
@@ -16,7 +28,7 @@ try:
     )
     from api.content_store import add_content
     _scraper_available = True
-except ImportError:
+except Exception:
     _scraper_available = False
     CHANNELS = {}
     scrape_latest_episodes = lambda x: []
@@ -56,12 +68,13 @@ for path in template_paths:
         template_dir = path
         break
 
-if template_dir:
+if template_dir and Jinja2Templates:
     templates = Jinja2Templates(directory=template_dir)
 else:
     templates = None
 
-app.include_router(stremio_router)
+if stremio_router:
+    app.include_router(stremio_router)
 
 
 @app.get("/", response_class=HTMLResponse)
