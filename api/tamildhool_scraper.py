@@ -248,14 +248,38 @@ def convert_to_stremio_format(shows: List[Dict[str, Any]]) -> List[Dict[str, Any
     return stremio_content
 
 
+def save_scraped_content():
+    """Scrape all content and save to JSON file for Vercel"""
+    import os
+    
+    logger.info("Starting full scrape...")
+    
+    all_shows = scrape_all_shows()
+    logger.info(f"Found {len(all_shows)} shows")
+    
+    stremio_series = convert_to_stremio_format(all_shows)
+    
+    latest_episodes = scrape_latest_episodes(50)
+    logger.info(f"Found {len(latest_episodes)} latest episodes")
+    
+    data = {
+        "movies": [],
+        "series": stremio_series,
+        "episodes": latest_episodes,
+        "last_updated": datetime.now().isoformat()
+    }
+    
+    data_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data")
+    os.makedirs(data_dir, exist_ok=True)
+    
+    json_path = os.path.join(data_dir, "scraped_content.json")
+    with open(json_path, "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=2, ensure_ascii=False)
+    
+    logger.info(f"Saved content to {json_path}")
+    return data
+
+
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
-    print("Scraping latest episodes...")
-    episodes = scrape_latest_episodes(10)
-    for ep in episodes:
-        print(f"  - {ep['title']}")
-    
-    print("\nScraping Sun TV shows...")
-    shows = scrape_show_list("sun-tv", "serials")
-    for show in shows[:5]:
-        print(f"  - {show['title']}")
+    save_scraped_content()

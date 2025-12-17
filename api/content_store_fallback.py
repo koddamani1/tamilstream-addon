@@ -1,8 +1,21 @@
 """
-Content store fallback - uses in-memory sample data only
+Content store fallback - uses scraped JSON data or in-memory sample data
 """
 
+import os
+import json
 from typing import Optional, List, Dict, Any
+
+def load_scraped_content():
+    """Load scraped content from JSON file if available"""
+    try:
+        json_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "scraped_content.json")
+        if os.path.exists(json_path):
+            with open(json_path, "r", encoding="utf-8") as f:
+                return json.load(f)
+    except Exception:
+        pass
+    return None
 
 SAMPLE_TAMIL_MOVIES = [
     {
@@ -138,8 +151,12 @@ SAMPLE_TORRENTS = [
     }
 ]
 
+_scraped_data = load_scraped_content()
 _content_cache = SAMPLE_TAMIL_MOVIES + SAMPLE_TAMIL_SERIES
 _torrents_cache = SAMPLE_TORRENTS
+
+if _scraped_data and (_scraped_data.get("series") or _scraped_data.get("movies")):
+    _content_cache = _scraped_data.get("movies", []) + _scraped_data.get("series", [])
 
 
 def initialize_sample_data():
