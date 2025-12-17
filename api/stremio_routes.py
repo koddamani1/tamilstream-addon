@@ -249,19 +249,30 @@ async def handle_stream(type: str, id: str, config: Optional[str]):
     streams = []
     
     if content and content.get("source_url"):
+        source_url = content.get("source_url")
+        streams.append({
+            "name": "TamilDhool",
+            "title": f"Watch on TamilDhool\n{content.get('title', 'Episode')}",
+            "externalUrl": source_url,
+            "behaviorHints": {
+                "bingeGroup": "tamildhool-web",
+                "notWebReady": True
+            }
+        })
+        
         try:
-            episode_details = scrape_episode_details(content.get("source_url"))
+            episode_details = scrape_episode_details(source_url)
             if episode_details and episode_details.get("video_sources"):
                 for idx, source in enumerate(episode_details["video_sources"]):
-                    source_url = source.get("url", "")
+                    video_url = source.get("url", "")
                     source_type = source.get("type", "iframe")
                     
-                    if source_url:
+                    if video_url:
                         stream_data = {
                             "name": "TamilDhool",
-                            "title": f"TamilDhool | Direct Stream #{idx+1}\nType: {source_type}",
-                            "externalUrl": source_url if source_type == "iframe" else None,
-                            "url": source_url if source_type == "direct" else None,
+                            "title": f"Direct Stream #{idx+1}\n{source_type.upper()}",
+                            "externalUrl": video_url if source_type == "iframe" else None,
+                            "url": video_url if source_type == "direct" else None,
                             "behaviorHints": {
                                 "bingeGroup": "tamildhool-direct",
                                 "notWebReady": source_type == "iframe"

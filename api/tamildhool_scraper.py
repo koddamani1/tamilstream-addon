@@ -76,10 +76,16 @@ def scrape_show_list(channel_slug: str, content_type: str = "serials") -> List[D
                     link = link_elem.get('href', '')
                     
                     poster = ""
-                    if img_elem:
-                        poster = img_elem.get('data-src') or img_elem.get('src', '')
-                        if poster.startswith('data:'):
-                            poster = img_elem.get('data-src', '')
+                    all_imgs = article.find_all('img')
+                    for img in all_imgs:
+                        src = img.get('src', '')
+                        data_src = img.get('data-src', '') or img.get('data-lazy-src', '')
+                        if data_src and not data_src.startswith('data:'):
+                            poster = data_src
+                            break
+                        elif src and not src.startswith('data:') and 'wp-content' in src:
+                            poster = src
+                            break
                     
                     show_id = link.rstrip('/').split('/')[-1]
                     
@@ -129,10 +135,16 @@ def scrape_latest_episodes(limit: int = 20) -> List[Dict[str, Any]]:
                     link = link_elem.get('href', '')
                     
                     poster = ""
-                    if img_elem:
-                        poster = img_elem.get('data-src') or img_elem.get('src', '')
-                        if poster.startswith('data:'):
-                            poster = img_elem.get('data-src', '')
+                    all_imgs = post.find_all('img')
+                    for img in all_imgs:
+                        src = img.get('src', '')
+                        data_src = img.get('data-src', '') or img.get('data-lazy-src', '')
+                        if data_src and not data_src.startswith('data:'):
+                            poster = data_src
+                            break
+                        elif src and not src.startswith('data:') and 'wp-content' in src:
+                            poster = src
+                            break
                     
                     date_str = ""
                     if date_elem:
