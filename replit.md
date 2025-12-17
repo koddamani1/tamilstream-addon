@@ -56,11 +56,19 @@ uvicorn api.main:app --host 0.0.0.0 --port 5000 --reload
 
 ## Recent Changes (December 2024)
 
-- Added PostgreSQL database for persistent storage
+- **Fixed Vercel deployment** - Removed pyproject.toml that was causing Poetry builds to fail
+- Added PostgreSQL database for persistent storage (Replit only, fallback on Vercel)
 - Built TamilDhool scraper for Tamil TV series content
 - Added OMDb API integration for automatic poster fetching
-- Created scraper API endpoints
+- Created scraper API endpoints with defensive imports for serverless compatibility
 - Fixed episode streaming with proper ID parsing
+- GitHub Actions set up for automatic scraping 3x daily (06:00, 15:00, 20:00 UTC)
+
+## Deployment Notes
+
+- **Vercel URL**: https://tamilstream-addon.vercel.app
+- **Important**: Do NOT add pyproject.toml - it causes Vercel to use Poetry instead of pip
+- Database features only work on Replit; Vercel uses in-memory fallback with sample data
 
 ## User Preferences
 
